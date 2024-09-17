@@ -42,14 +42,14 @@ type Props2 = {
 
 function Icon({ color, type }: Props2) {
   let faIcon;
-  const pieceColor = color === "white" ? "#E0D6C8" : "#1F2937";
-  const pieceOutline = color === "white" ? "#1F2937" : "#E0D6C8";
+  const pieceColor = color === "w" ? "#E0D6C8" : "#1F2937";
+  const pieceOutline = color === "w" ? "#1F2937" : "#E0D6C8";
   switch (type) {
     case "king":
       faIcon = (
         <FaChessKing
           stroke={pieceOutline}
-          stroke-width="25"
+          strokeWidth="25"
           fill={pieceColor}
           overflow="visible"
           className="w-4/5 h-4/5"
@@ -60,7 +60,7 @@ function Icon({ color, type }: Props2) {
       faIcon = (
         <FaChessQueen
           stroke={pieceOutline}
-          stroke-width="25"
+          strokeWidth="25"
           fill={pieceColor}
           overflow="visible"
           className="w-4/5 h-4/5"
@@ -71,7 +71,7 @@ function Icon({ color, type }: Props2) {
       faIcon = (
         <FaChessRook
           stroke={pieceOutline}
-          stroke-width="25"
+          strokeWidth="25"
           fill={pieceColor}
           overflow="visible"
           className="w-4/5 h-4/5"
@@ -82,7 +82,7 @@ function Icon({ color, type }: Props2) {
       faIcon = (
         <FaChessBishop
           stroke={pieceOutline}
-          stroke-width="25"
+          strokeWidth="25"
           fill={pieceColor}
           overflow="visible"
           className="w-4/5 h-4/5"
@@ -93,7 +93,7 @@ function Icon({ color, type }: Props2) {
       faIcon = (
         <FaChessKnight
           stroke={pieceOutline}
-          stroke-width="25"
+          strokeWidth="25"
           fill={pieceColor}
           overflow="visible"
           className="w-4/5 h-4/5"
@@ -104,7 +104,7 @@ function Icon({ color, type }: Props2) {
       faIcon = (
         <FaChessPawn
           stroke={pieceOutline}
-          stroke-width="25"
+          strokeWidth="25"
           fill={pieceColor}
           overflow="visible"
           className="w-4/5 h-4/5"
