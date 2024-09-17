@@ -1,5 +1,4 @@
-// eslint-disable no-unused-vars
-const tailwindClasses = [""]; //placeholder
+import { ChessPiece } from "./components/ChessPiece";
 
 export default function App() {
   const rows = [];
@@ -10,7 +9,9 @@ export default function App() {
       spaces.push(
         <div
           key={`row${8 - i}column${j + 1}`}
-          className={`w-[12.5%] h-full ${isWhite ? "" : "bg-gray-800"}`}
+          className={`w-[12.5%] h-full ${
+            isWhite ? "bg-[#E0D6C8]" : "bg-gray-800"
+          }`}
         ></div>
       );
     }
@@ -23,11 +24,19 @@ export default function App() {
   }
   return (
     <div className="flex justify-center">
-      <div className="w-[35px] lg:w-[75px] h-[280px] lg:h-[600px]"></div>
-      <div className="w-[280px] lg:w-[600px] h-[280px] lg:h-[600px]">
+      <div className="w-[35px] md:w-[75px] h-[280px] md:h-[600px]"></div>
+      <div className="relative w-[280px] md:w-[600px] h-[280px] md:h-[600px]">
         {rows}
+        <ChessPiece
+          position={{
+            x: 2,
+            y: 1,
+          }}
+          color={"white"}
+          startType={"knight"}
+        />
       </div>
-      <div className="w-[35px] lg:w-[75px] h-[280px] lg:h-[600px]"></div>
+      <div className="w-[35px] md:w-[75px] h-[280px] md:h-[600px]"></div>
     </div>
   );
 }
