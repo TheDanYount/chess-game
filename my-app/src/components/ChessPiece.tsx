@@ -17,18 +17,35 @@ type Props = {
   position: Position;
   color: string;
   startType: string;
+  onPieceClick: (
+    position: Position,
+    color: string,
+    type: "king" | "queen" | "rook" | "bishop" | "knight" | "pawn",
+    hasMoved: boolean,
+    isImprisoned: boolean
+  ) => void;
 };
 
-export function ChessPiece({ position, color, startType }: Props) {
+export function ChessPiece({
+  position,
+  color,
+  startType,
+  onPieceClick,
+}: Props) {
   const [hasMoved, setHasMoved] = useState(false);
   const [isImprisoned, setIsImprisoned] = useState(false);
-  const [type, setType] = useState(startType);
+  const [type, setType] = useState<
+    "king" | "queen" | "rook" | "bishop" | "knight" | "pawn"
+  >(startType);
   return (
     <div
-      className={`absolute w-[35px] md:w-[75px] h-[35px] md:h-[75px] flex
-    justify-center items-center
+      className={`piece absolute w-[35px] md:w-[75px] h-[35px] md:h-[75px] flex
+        justify-center items-center
     ${positions[position.x]} ${mdPositions[position.x]}
     ${positions[position.y + 8]} ${mdPositions[position.y + 8]}`}
+      onClick={() =>
+        onPieceClick(position, color, type, hasMoved, isImprisoned)
+      }
     >
       <Icon color={color} type={type} />
     </div>
