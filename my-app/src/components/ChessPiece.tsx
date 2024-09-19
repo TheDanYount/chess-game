@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Piece, Position } from "../App.tsx";
 import {
   FaChessKing,
   FaChessQueen,
@@ -8,46 +8,35 @@ import {
   FaChessPawn,
 } from "react-icons/fa";
 
-type Position = {
-  x: number;
-  y: number;
-};
-
 type Props = {
-  position: Position;
-  color: string;
-  startType: string;
+  pStats: Piece;
   onPieceClick: (
-    position: Position,
+    pos: Position,
     color: string,
     type: "king" | "queen" | "rook" | "bishop" | "knight" | "pawn",
-    hasMoved: boolean,
-    isImprisoned: boolean
+    hasNotMoved?: boolean,
+    isImprisoned?: boolean
   ) => void;
 };
 
-export function ChessPiece({
-  position,
-  color,
-  startType,
-  onPieceClick,
-}: Props) {
-  const [hasMoved, setHasMoved] = useState(false);
-  const [isImprisoned, setIsImprisoned] = useState(false);
-  const [type, setType] = useState<
-    "king" | "queen" | "rook" | "bishop" | "knight" | "pawn"
-  >(startType);
+export function ChessPiece({ pStats, onPieceClick }: Props) {
   return (
     <div
       className={`piece absolute w-[35px] md:w-[75px] h-[35px] md:h-[75px] flex
         justify-center items-center
-    ${positions[position.x]} ${mdPositions[position.x]}
-    ${positions[position.y + 8]} ${mdPositions[position.y + 8]}`}
+    ${positions[pStats.position.x]} ${mdPositions[pStats.position.x]}
+    ${positions[pStats.position.y + 8]} ${mdPositions[pStats.position.y + 8]}`}
       onClick={() =>
-        onPieceClick(position, color, type, hasMoved, isImprisoned)
+        onPieceClick(
+          pStats.position,
+          pStats.color,
+          pStats.type,
+          pStats.hasNotMoved,
+          pStats.isImprisoned
+        )
       }
     >
-      <Icon color={color} type={type} />
+      <Icon color={pStats.color} type={pStats.type} />
     </div>
   );
 }
@@ -59,74 +48,33 @@ type Props2 = {
 
 function Icon({ color, type }: Props2) {
   let faIcon;
-  const pieceColor = color === "w" ? "#E0D6C8" : "#1F2937";
-  const pieceOutline = color === "w" ? "#1F2937" : "#E0D6C8";
+  const pieceColor = color === "white" ? "#E0D6C8" : "#1F2937";
+  const pieceOutline = color === "white" ? "#1F2937" : "#E0D6C8";
+  const attributes = {
+    stroke: pieceOutline,
+    strokeWidth: "25",
+    fill: pieceColor,
+    overflow: "visible",
+    className: "w-4/5 h-4/5",
+  };
   switch (type) {
     case "king":
-      faIcon = (
-        <FaChessKing
-          stroke={pieceOutline}
-          strokeWidth="25"
-          fill={pieceColor}
-          overflow="visible"
-          className="w-4/5 h-4/5"
-        />
-      );
+      faIcon = <FaChessKing {...attributes} />;
       break;
     case "queen":
-      faIcon = (
-        <FaChessQueen
-          stroke={pieceOutline}
-          strokeWidth="25"
-          fill={pieceColor}
-          overflow="visible"
-          className="w-4/5 h-4/5"
-        />
-      );
+      faIcon = <FaChessQueen {...attributes} />;
       break;
     case "rook":
-      faIcon = (
-        <FaChessRook
-          stroke={pieceOutline}
-          strokeWidth="25"
-          fill={pieceColor}
-          overflow="visible"
-          className="w-4/5 h-4/5"
-        />
-      );
+      faIcon = <FaChessRook {...attributes} />;
       break;
     case "bishop":
-      faIcon = (
-        <FaChessBishop
-          stroke={pieceOutline}
-          strokeWidth="25"
-          fill={pieceColor}
-          overflow="visible"
-          className="w-4/5 h-4/5"
-        />
-      );
+      faIcon = <FaChessBishop {...attributes} />;
       break;
     case "knight":
-      faIcon = (
-        <FaChessKnight
-          stroke={pieceOutline}
-          strokeWidth="25"
-          fill={pieceColor}
-          overflow="visible"
-          className="w-4/5 h-4/5"
-        />
-      );
+      faIcon = <FaChessKnight {...attributes} />;
       break;
     default:
-      faIcon = (
-        <FaChessPawn
-          stroke={pieceOutline}
-          strokeWidth="25"
-          fill={pieceColor}
-          overflow="visible"
-          className="w-4/5 h-4/5"
-        />
-      );
+      faIcon = <FaChessPawn {...attributes} />;
   }
   return faIcon;
 }
