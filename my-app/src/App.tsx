@@ -11,7 +11,7 @@ export type Position = {
 export type Piece = {
   position: Position;
   color: string;
-  type: string;
+  type: "king" | "queen" | "rook" | "bishop" | "knight" | "pawn";
   hasNotMoved?: boolean;
   isImprisoned?: boolean;
 };
@@ -26,6 +26,26 @@ export default function App() {
   const [gameState, setGameState] =
     useState<(Piece | undefined)[][]>(initialPieceState);
   const [moves, setMoves] = useState<Move[]>([]);
+  const [potentailEnPassants, setPotentialEnPassants] = useState();
+
+  function getSpecialMoves(
+    position: Position,
+    color: string,
+    type: "king" | "queen" | "rook" | "bishop" | "knight" | "pawn",
+    hasNotMoved?: boolean
+  ) {
+    const specialMoves = [];
+    if (type === "pawn") {
+      if (hasNotMoved && color === "white") {
+        specialMoves.push({ x: position.x, y: position.y - 2 });
+      } else if (hasNotMoved && color === "black") {
+        specialMoves.push({ x: position.x, y: position.y + 2 });
+      }
+    } else if (type === "king") {
+      console.log("nothing for kings yet");
+    }
+    return specialMoves;
+  }
 
   function handlePieceClick(
     position: Position,
@@ -46,9 +66,19 @@ export default function App() {
         y: position.y + (color === "white" ? move.y : -move.y),
       };
     });
+    const specialMoves: Move[] = getSpecialMoves(
+      position,
+      color,
+      type,
+      hasNotMoved
+    );
+    for (const move of specialMoves) {
+      absoluteMoves.push(move);
+    }
     const movesOnBoard = absoluteMoves.filter(
       (move) => move.x >= 0 && move.x <= 7 && move.y >= 0 && move.y <= 7
     );
+    console.log(movesOnBoard);
     setMoves(
       movesOnBoard.map((move) => {
         return { x: move.x, y: move.y };

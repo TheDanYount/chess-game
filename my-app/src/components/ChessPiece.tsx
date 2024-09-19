@@ -43,7 +43,7 @@ export function ChessPiece({ pStats, onPieceClick }: Props) {
 
 type Props2 = {
   color: string;
-  type: string;
+  type: "king" | "queen" | "rook" | "bishop" | "knight" | "pawn";
 };
 
 function Icon({ color, type }: Props2) {
