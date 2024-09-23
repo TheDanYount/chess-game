@@ -36,9 +36,17 @@ export default function App() {
   ) {
     const specialMoves = [];
     if (type === "pawn") {
-      if (hasNotMoved && color === "white") {
+      if (
+        hasNotMoved &&
+        color === "white" &&
+        gameState[position.y - 1][position.x] === undefined
+      ) {
         specialMoves.push({ x: position.x, y: position.y - 2 });
-      } else if (hasNotMoved && color === "black") {
+      } else if (
+        hasNotMoved &&
+        color === "black" &&
+        gameState[position.y + 1][position.x] === undefined
+      ) {
         specialMoves.push({ x: position.x, y: position.y + 2 });
       }
     } else if (type === "king") {
@@ -56,16 +64,51 @@ export default function App() {
   ) {
     const relativeMoves = [];
     for (const directionalMoveSet of normalMoveSets[type]) {
+      relativeMoves.push(directionalMoveSet);
+    }
+    const absoluteMoves = relativeMoves.map((directionalMoveSet) => {
+      const newDMS = directionalMoveSet.map((move) => {
+        return {
+          x: position.x + move.x,
+          y: position.y + (color === "white" ? move.y : -move.y),
+        };
+      });
+      return newDMS;
+    });
+    console.log(absoluteMoves);
+    const validMoveSets = absoluteMoves.map((directionalMoveSet) => {
+      let blocked = false;
+      const newDMS = directionalMoveSet.filter((move) => {
+        if (
+          !blocked &&
+          move.y > -1 &&
+          move.y < 8 && //row exists
+          move.x > -1 &&
+          move.x < 8 //column exists
+        ) {
+          if (
+            gameState[move.y][move.x] === undefined || // empty space
+            (gameState[move.y][move.x]?.color !== color && //enemy occupies potential move
+              type !== "pawn")
+          ) {
+            return true;
+          }
+        }
+        blocked = true;
+        return false;
+      });
+      return newDMS;
+    });
+    const validMoves = [];
+    for (const directionalMoveSet of validMoveSets) {
       for (const move of directionalMoveSet) {
-        relativeMoves.push(move);
+        validMoves.push(
+          gameState[move.y][move.x]
+            ? { x: position.x, y: position.y, isEnemy: true }
+            : move
+        );
       }
     }
-    const absoluteMoves = relativeMoves.map((move) => {
-      return {
-        x: position.x + move.x,
-        y: position.y + (color === "white" ? move.y : -move.y),
-      };
-    });
     const specialMoves: Move[] = getSpecialMoves(
       position,
       color,
@@ -73,14 +116,10 @@ export default function App() {
       hasNotMoved
     );
     for (const move of specialMoves) {
-      absoluteMoves.push(move);
+      validMoves.push(move);
     }
-    const movesOnBoard = absoluteMoves.filter(
-      (move) => move.x >= 0 && move.x <= 7 && move.y >= 0 && move.y <= 7
-    );
-    console.log(movesOnBoard);
     setMoves(
-      movesOnBoard.map((move) => {
+      validMoves.map((move) => {
         return { x: move.x, y: move.y };
       })
     );
