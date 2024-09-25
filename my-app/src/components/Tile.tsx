@@ -17,8 +17,7 @@ type Props = {
     x: number,
     color?: string,
     type?: string,
-    hasMoved?: boolean,
-    isImprisoned?: boolean
+    hasMoved?: boolean
   ) => void;
 };
 
@@ -33,8 +32,7 @@ export function Tile({ y, x, tileStats, onTileClick }: Props) {
           x,
           tileStats?.pieceStats?.color,
           tileStats?.pieceStats?.type,
-          tileStats?.pieceStats?.hasMoved,
-          tileStats?.pieceStats?.isImprisoned
+          tileStats?.pieceStats?.hasMoved
         )
       }
     >

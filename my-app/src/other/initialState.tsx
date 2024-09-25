@@ -32,3 +32,16 @@ function generateInitialTiles() {
 }
 
 export const initialTileStats = generateInitialTiles();
+
+export function tileBackgroundReset(gameState: TileStats[][]) {
+  let num = 0;
+  for (const row of gameState) {
+    for (const tile of row) {
+      tile.bgColor =
+        (Math.floor(num / 8) + (num % 8)) % 2 === 0
+          ? "bg-[#EEE7D8]"
+          : "bg-[#111827]";
+      num++;
+    }
+  }
+}

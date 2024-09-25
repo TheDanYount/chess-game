@@ -1,3 +1,5 @@
+import { TileStats, Move } from "../App";
+
 const protoNormalMoveSets = {
   king: [[{ x: 0, y: 1 }], [{ x: 1, y: 1 }]],
   queen: [[{ x: 0, y: 1 }], [{ x: 1, y: 1 }]],
@@ -46,4 +48,67 @@ extendMoveSet(protoNormalMoveSets.queen);
 extendMoveSet(protoNormalMoveSets.rook);
 extendMoveSet(protoNormalMoveSets.bishop);
 
-export const normalMoveSets = protoNormalMoveSets;
+const normalMoveSets = protoNormalMoveSets;
+
+export function getMoves(
+  gameState: TileStats[][],
+  y: number,
+  x: number,
+  color: string,
+  type: string,
+  hasMoved: boolean
+): Move[] {
+  const moves = [] as Move[];
+  const convertedType = type as
+    | "king"
+    | "queen"
+    | "rook"
+    | "bishop"
+    | "knight"
+    | "pawn";
+  const relativeMoves = normalMoveSets[convertedType];
+  const absoluteMoves = relativeMoves.map((directionalMoveSet) =>
+    directionalMoveSet.map((move) => {
+      return {
+        x: move.x + x,
+        y: move.y + y,
+      };
+    })
+  );
+  if (type === "pawn" && !hasMoved) {
+    absoluteMoves[0].push({
+      x: absoluteMoves[0][0].x,
+      y: absoluteMoves[0][0].y - 1,
+    });
+  }
+  if (type === "pawn" && color === "black") {
+    for (let i = 0; i < absoluteMoves[0].length; i++) {
+      absoluteMoves[0][i].y += 2 * (i + 1);
+    }
+  }
+  const validNormalMoves = absoluteMoves.map((directionalMoveSet) => {
+    let blocked = false;
+    return directionalMoveSet.map((move) => {
+      if (blocked || move.y < 0 || move.y > 7 || move.x < 0 || move.x > 7)
+        return;
+      if (!gameState[move.y][move.x]?.pieceStats) {
+        return { x: move.x, y: move.y, isEnemy: false };
+      }
+      if (gameState[move.y][move.x].pieceStats?.color === color) {
+        blocked = true;
+        return;
+      } else if (type !== "pawn") {
+        blocked = true;
+        return { x: move.x, y: move.y, isEnemy: true };
+      } else {
+        return;
+      }
+    });
+  });
+  for (const directionalMoveSet of validNormalMoves) {
+    for (const move of directionalMoveSet.filter((e) => e !== undefined)) {
+      moves.push(move);
+    }
+  }
+  return moves;
+}
