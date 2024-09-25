@@ -6,7 +6,7 @@ import {
 } from "./other/initialState.tsx";
 import { getMoves } from "./other/moves.tsx";
 
-type PieceStats = {
+export type PieceStats = {
   color: string;
   type: string;
   hasMoved?: boolean;
@@ -26,9 +26,14 @@ export type Move = {
 export default function App() {
   const [gameState, setGameState] = useState<TileStats[][]>(initialTileStats);
   const [potentialMoves, setPotentialMoves] = useState<Move[]>([]);
-  const [prisons, setPrisons] = useState<PieceStats[][]>();
+  //const [prisons, setPrisons] = useState<PieceStats[][]>();
   const [isWhitesTurn, setIsWhitesTurn] = useState(true);
   const [currentPiece, setCurrentPiece] = useState<{
+    y: number;
+    x: number;
+    pieceStats: PieceStats;
+  }>();
+  const [potentialEnPassant, setPotentialEnPassant] = useState<{
     y: number;
     x: number;
     pieceStats: PieceStats;
@@ -54,7 +59,8 @@ export default function App() {
         x,
         color as string,
         type as string,
-        !hasMoved ? false : true
+        !hasMoved ? false : true,
+        potentialEnPassant
       );
       setPotentialMoves(currentMoves);
       setCurrentPiece({
@@ -85,8 +91,23 @@ export default function App() {
       currentPiece.pieceStats.hasMoved = true;
     // Remove the piece that's leaving
     gameState[currentPiece.y][currentPiece.x].pieceStats = undefined;
+
+    if (
+      currentPiece.pieceStats.type === "pawn" &&
+      gameState[y][x].pieceStats === undefined &&
+      currentPiece.x !== x
+    ) {
+      gameState[currentPiece.y][x].pieceStats = undefined;
+    }
     // Move the currentPiece to the new spot
     gameState[y][x].pieceStats = currentPiece.pieceStats;
+    if (potentialEnPassant) setPotentialEnPassant(undefined);
+    if (
+      currentPiece.pieceStats.type === "pawn" &&
+      Math.abs(currentPiece.y - y) === 2
+    ) {
+      setPotentialEnPassant({ y, x, pieceStats: currentPiece.pieceStats });
+    }
     setCurrentPiece(undefined);
     setIsWhitesTurn(!isWhitesTurn);
     setPotentialMoves([]);

@@ -1,4 +1,4 @@
-import { TileStats, Move } from "../App";
+import { TileStats, Move, PieceStats } from "../App";
 
 const protoNormalMoveSets = {
   king: [[{ x: 0, y: 1 }], [{ x: 1, y: 1 }]],
@@ -56,7 +56,12 @@ export function getMoves(
   x: number,
   color: string,
   type: string,
-  hasMoved: boolean
+  hasMoved: boolean,
+  potentialEnPassant?: {
+    y: number;
+    x: number;
+    pieceStats: PieceStats;
+  }
 ): Move[] {
   const moves = [] as Move[];
   const convertedType = type as
@@ -105,6 +110,19 @@ export function getMoves(
       }
     });
   });
+  if (
+    potentialEnPassant &&
+    type === "pawn" &&
+    potentialEnPassant.y === y &&
+    Math.abs(potentialEnPassant.x - x) === 1
+  ) {
+    moves.push({
+      x: potentialEnPassant.x,
+      y:
+        color === "white" ? potentialEnPassant.y - 1 : potentialEnPassant.y + 1,
+      isEnemy: true,
+    });
+  }
   for (const directionalMoveSet of validNormalMoves) {
     for (const move of directionalMoveSet.filter((e) => e !== undefined)) {
       moves.push(move);
