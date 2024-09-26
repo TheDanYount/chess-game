@@ -115,7 +115,7 @@ export function getMoves(
       for (let i = -1; i < 2; i += 2) {
         if (
           x + i > -1 &&
-          x - 1 < 8 &&
+          x + i < 8 &&
           gameState[y - 1][x + i].pieceStats?.color === "black"
         ) {
           moves.push({
@@ -125,12 +125,11 @@ export function getMoves(
           });
         }
       }
-    } else {
-      // meaning if color === 'black'
+    } /* meaning if color === 'black' */ else {
       for (let i = -1; i < 2; i += 2) {
         if (
           x + i > -1 &&
-          x - 1 < 8 &&
+          x + i < 8 &&
           gameState[y + 1][x + i].pieceStats?.color === "white"
         ) {
           moves.push({
@@ -154,6 +153,24 @@ export function getMoves(
         color === "white" ? potentialEnPassant.y - 1 : potentialEnPassant.y + 1,
       isEnemy: true,
     });
+  }
+  if (type === "king" && !hasMoved) {
+    // Queen side castle
+    if (
+      gameState[y][0].pieceStats &&
+      gameState[y][0].pieceStats.type === "rook" &&
+      !gameState[y][0].pieceStats.hasMoved
+    ) {
+      moves.push({ x: 2, y, isEnemy: false });
+    }
+    // King side castle
+    if (
+      gameState[y][7].pieceStats &&
+      gameState[y][7].pieceStats.type === "rook" &&
+      !gameState[y][7].pieceStats.hasMoved
+    ) {
+      moves.push({ x: 6, y, isEnemy: false });
+    }
   }
   for (const directionalMoveSet of validNormalMoves) {
     for (const move of directionalMoveSet.filter((e) => e !== undefined)) {

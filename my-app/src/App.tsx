@@ -91,7 +91,7 @@ export default function App() {
       currentPiece.pieceStats.hasMoved = true;
     // Remove the piece that's leaving
     gameState[currentPiece.y][currentPiece.x].pieceStats = undefined;
-
+    // Removal for en passant
     if (
       currentPiece.pieceStats.type === "pawn" &&
       gameState[y][x].pieceStats === undefined &&
@@ -99,9 +99,23 @@ export default function App() {
     ) {
       gameState[currentPiece.y][x].pieceStats = undefined;
     }
+    // Castling rook behavior
+    if (currentPiece.pieceStats.type === "king") {
+      //Queen side castle
+      if (currentPiece.x - x === 2) {
+        gameState[y][3].pieceStats = gameState[y][0].pieceStats as PieceStats;
+        gameState[y][3].pieceStats.hasMoved = true;
+        gameState[y][0].pieceStats = undefined;
+      } /* King side castle */ else if (currentPiece.x - x === -2) {
+        gameState[y][5].pieceStats = gameState[y][7].pieceStats as PieceStats;
+        gameState[y][5].pieceStats.hasMoved = true;
+        gameState[y][7].pieceStats = undefined;
+      }
+    }
     // Move the currentPiece to the new spot
     gameState[y][x].pieceStats = currentPiece.pieceStats;
     if (potentialEnPassant) setPotentialEnPassant(undefined);
+    // Check to add potential en passant
     if (
       currentPiece.pieceStats.type === "pawn" &&
       Math.abs(currentPiece.y - y) === 2
