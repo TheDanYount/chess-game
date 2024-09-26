@@ -50,6 +50,71 @@ extendMoveSet(protoNormalMoveSets.bishop);
 
 const normalMoveSets = protoNormalMoveSets;
 
+function isThreatened(
+  color: string,
+  y: number,
+  x: number,
+  gameState: TileStats[][]
+) {
+  const relativePaths = normalMoveSets.queen;
+  const absolutePaths = relativePaths.map((directionalMoveSet) =>
+    directionalMoveSet.map((move) => {
+      return {
+        x: move.x + x,
+        y: move.y + y,
+      };
+    })
+  );
+  const validPaths = absolutePaths.map((directionalMoveSet) =>
+    directionalMoveSet.filter((move) => {
+      if (move.x < 0 || move.x > 7 || move.y < 0 || move.y > 7) return false;
+      return true;
+    })
+  );
+  for (let i = 0; i < validPaths.length; i++) {
+    for (let j = 0; j < validPaths[i].length; j++) {
+      const potentialConflict =
+        gameState[validPaths[i][j].y][validPaths[i][j].x].pieceStats;
+      if (potentialConflict) {
+        if (potentialConflict.color === color) break;
+        if (
+          i % 2 === 0 &&
+          (potentialConflict.type === "queen" ||
+            potentialConflict.type === "rook")
+        ) {
+          return true;
+        } else if (
+          potentialConflict.type === "bishop" ||
+          (potentialConflict.type === "pawn" &&
+            j === 0 &&
+            ((color === "white" && validPaths[i][j].y < y) ||
+              (color === "black" && validPaths[i][j].y > y)))
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+  const relativeSpots = normalMoveSets.knight;
+  const absoluteSpots = [];
+  for (const moveSet of relativeSpots) {
+    absoluteSpots.push({ x: moveSet[0].x, y: moveSet[0].y });
+  }
+  for (const move of absoluteSpots) {
+    if (move.x > -1 && move.x < 8 && move.y > -1 && move.y < 8) {
+      const potentialConflict = gameState[move.y][move.x].pieceStats;
+      if (
+        potentialConflict &&
+        potentialConflict.color !== color &&
+        potentialConflict.type === "knight"
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function getMoves(
   gameState: TileStats[][],
   y: number,
@@ -159,7 +224,13 @@ export function getMoves(
     if (
       gameState[y][0].pieceStats &&
       gameState[y][0].pieceStats.type === "rook" &&
-      !gameState[y][0].pieceStats.hasMoved
+      !gameState[y][0].pieceStats.hasMoved &&
+      gameState[y][1].pieceStats === undefined &&
+      gameState[y][2].pieceStats === undefined &&
+      gameState[y][3].pieceStats === undefined &&
+      !isThreatened(color, y, 2, gameState) &&
+      !isThreatened(color, y, 3, gameState) &&
+      !isThreatened(color, y, 4, gameState)
     ) {
       moves.push({ x: 2, y, isEnemy: false });
     }
@@ -167,7 +238,12 @@ export function getMoves(
     if (
       gameState[y][7].pieceStats &&
       gameState[y][7].pieceStats.type === "rook" &&
-      !gameState[y][7].pieceStats.hasMoved
+      !gameState[y][7].pieceStats.hasMoved &&
+      gameState[y][5].pieceStats === undefined &&
+      gameState[y][6].pieceStats === undefined &&
+      !isThreatened(color, y, 4, gameState) &&
+      !isThreatened(color, y, 5, gameState) &&
+      !isThreatened(color, y, 6, gameState)
     ) {
       moves.push({ x: 6, y, isEnemy: false });
     }
