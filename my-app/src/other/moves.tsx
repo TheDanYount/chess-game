@@ -110,6 +110,38 @@ export function getMoves(
       }
     });
   });
+  if (type === "pawn") {
+    if (color === "white") {
+      for (let i = -1; i < 2; i += 2) {
+        if (
+          x + i > -1 &&
+          x - 1 < 8 &&
+          gameState[y - 1][x + i].pieceStats?.color === "black"
+        ) {
+          moves.push({
+            y: y - 1,
+            x: x + i,
+            isEnemy: true,
+          });
+        }
+      }
+    } else {
+      // meaning if color === 'black'
+      for (let i = -1; i < 2; i += 2) {
+        if (
+          x + i > -1 &&
+          x - 1 < 8 &&
+          gameState[y + 1][x + i].pieceStats?.color === "white"
+        ) {
+          moves.push({
+            y: y + 1,
+            x: x + i,
+            isEnemy: true,
+          });
+        }
+      }
+    }
+  }
   if (
     potentialEnPassant &&
     type === "pawn" &&
