@@ -1,101 +1,171 @@
 import { useState } from "react";
-import { ChessPiece } from "./components/ChessPiece";
+import { Tile } from "./components/Tile.tsx";
+import {
+  initialTileStats,
+  tileBackgroundReset,
+} from "./other/initialState.tsx";
+import { getMoves } from "./other/moves.tsx";
+import { Piece } from "./components/Piece.tsx";
+
+export type PieceStats = {
+  color: string;
+  type: string;
+  hasMoved?: boolean;
+};
+
+export type TileStats = {
+  bgColor: string;
+  pieceStats?: PieceStats;
+};
+
+export type Move = {
+  x: number;
+  y: number;
+  isEnemy: boolean;
+};
 
 export default function App() {
-  const rows = [];
-  const [player1Lane, setPlayer1Lane] = useState();
-  const [player2Lane, setPlayer2Lane] = useState();
-  const [gameState, setGameState] = useState(startConditions);
-  for (let i = 0; i < 8; i++) {
-    const spaces = [];
-    for (let j = 0; j < 8; j++) {
-      const isWhite = (i + j) % 2 === 0 ? true : false;
-      spaces.push(
-        <div
-          key={`row${8 - i}column${j + 1}`}
-          className={`w-[12.5%] h-full ${
-            isWhite ? "bg-[#EEE7D8]" : "bg-[#111827]"
-          }`}
-        ></div>
+  const [gameState, setGameState] = useState<TileStats[][]>(initialTileStats);
+  const [potentialMoves, setPotentialMoves] = useState<Move[]>([]);
+  const [prisons, setPrisons] = useState<PieceStats[][]>([[], []]);
+  const [isWhitesTurn, setIsWhitesTurn] = useState(true);
+  const [currentPiece, setCurrentPiece] = useState<{
+    y: number;
+    x: number;
+    pieceStats: PieceStats;
+  }>();
+  const [potentialEnPassant, setPotentialEnPassant] = useState<{
+    y: number;
+    x: number;
+    pieceStats: PieceStats;
+  }>();
+
+  function handlePieceClick(
+    y: number,
+    x: number,
+    color?: string,
+    type?: string,
+    hasMoved?: boolean
+  ) {
+    if (
+      (color === "white" && isWhitesTurn) ||
+      (color === "black" && !isWhitesTurn)
+    ) {
+      const convertedType = type as string;
+      //Note that making the following a state setter would make later code redundant
+      tileBackgroundReset(gameState);
+      const currentMoves = getMoves(
+        gameState,
+        y,
+        x,
+        color as string,
+        type as string,
+        !hasMoved ? false : true,
+        potentialEnPassant
       );
+      setPotentialMoves(currentMoves);
+      setCurrentPiece({
+        y,
+        x,
+        pieceStats: { color, type: convertedType, hasMoved },
+      });
+      for (const move of currentMoves) {
+        const formerBgColor = gameState[move.y][move.x].bgColor;
+        gameState[move.y][move.x].bgColor =
+          formerBgColor === "bg-[#EEE7D8]"
+            ? move.isEnemy
+              ? "bg-[#F48A81]"
+              : "bg-[#8EF081]"
+            : move.isEnemy
+            ? "bg-[#700E17]"
+            : "bg-[#0A7417]";
+      }
+      setGameState(gameState.slice());
+    } else if (potentialMoves.find((e) => e.y === y && e.x === x)) {
+      handleMove(y, x);
     }
-    const row = (
-      <div key={`row${8 - i}`} className="flex w-full h-[12.5%]">
-        {spaces}
-      </div>
-    );
-    rows.push(row);
   }
+
+  function handleMove(y: number, x: number) {
+    if (!currentPiece) return;
+    if (!currentPiece.pieceStats.hasMoved)
+      currentPiece.pieceStats.hasMoved = true;
+    // Remove the piece that's leaving
+    gameState[currentPiece.y][currentPiece.x].pieceStats = undefined;
+    // Removal for en passant
+    if (
+      currentPiece.pieceStats.type === "pawn" &&
+      gameState[y][x].pieceStats === undefined &&
+      currentPiece.x !== x
+    ) {
+      gameState[currentPiece.y][x].pieceStats = undefined;
+    }
+    // Castling rook behavior
+    if (currentPiece.pieceStats.type === "king") {
+      //Queen side castle
+      if (currentPiece.x - x === 2) {
+        gameState[y][3].pieceStats = gameState[y][0].pieceStats as PieceStats;
+        gameState[y][3].pieceStats.hasMoved = true;
+        gameState[y][0].pieceStats = undefined;
+      } /* King side castle */ else if (currentPiece.x - x === -2) {
+        gameState[y][5].pieceStats = gameState[y][7].pieceStats as PieceStats;
+        gameState[y][5].pieceStats.hasMoved = true;
+        gameState[y][7].pieceStats = undefined;
+      }
+    }
+    //Move the capture piece to prison
+    if (gameState[y][x].pieceStats) {
+      const prisonIndex = gameState[y][x].pieceStats.color === "black" ? 0 : 1;
+      prisons[prisonIndex].push(gameState[y][x].pieceStats);
+      setPrisons(prisons.slice());
+    }
+    // Move the currentPiece to the new spot
+    gameState[y][x].pieceStats = currentPiece.pieceStats;
+    if (potentialEnPassant) setPotentialEnPassant(undefined);
+    // Check to add potential en passant
+    if (
+      currentPiece.pieceStats.type === "pawn" &&
+      Math.abs(currentPiece.y - y) === 2
+    ) {
+      setPotentialEnPassant({ y, x, pieceStats: currentPiece.pieceStats });
+    }
+    setCurrentPiece(undefined);
+    setIsWhitesTurn(!isWhitesTurn);
+    setPotentialMoves([]);
+    tileBackgroundReset(gameState);
+    setGameState(gameState);
+  }
+
+  let num = -1;
   return (
-    <div className="flex justify-center">
-      <div className="w-[35px] md:w-[75px] h-[280px] md:h-[600px]"></div>
-      <div className="relative w-[280px] md:w-[600px] h-[280px] md:h-[600px]">
-        {rows}
-        {gameState.map((e) => {
-          return e;
-        })}
+    <div className="flex">
+      <div className="flex flex-col-reverse w-[35px] md:w-[75px] h-[280px] md:h-[600px] my-[-10.5px] md:my-[-22.5px]">
+        {prisons[0].map((piece) => (
+          <Piece color={piece.color} type={piece.type} />
+        ))}
       </div>
-      <div className="w-[35px] md:w-[75px] h-[280px] md:h-[600px]"></div>
+      <div className="flex flex-col w-[280px] md:w-[600px] h-[280px] md:h-[600px]">
+        {gameState.map((row) => (
+          <div className="flex w-[280px] md:w-[600px] h-[35px] md:h-[75px]">
+            {row.map((tileStats) => {
+              num++;
+              return (
+                <Tile
+                  y={Math.floor(num / 8)}
+                  x={num % 8}
+                  tileStats={tileStats}
+                  onTileClick={handlePieceClick}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col-reverse w-[35px] md:w-[75px] h-[280px] md:h-[600px] my-[-10.5px] md:my-[-22.5px]">
+        {prisons[1].map((piece) => (
+          <Piece color={piece.color} type={piece.type} />
+        ))}
+      </div>
     </div>
   );
 }
-
-const rowOfBlanks = [
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-];
-
-const startConditions = [
-  [
-    [
-      <ChessPiece position={{ x: 0, y: 0 }} color={"b"} startType={"rook"} />,
-      <ChessPiece position={{ x: 1, y: 0 }} color={"b"} startType={"knight"} />,
-      <ChessPiece position={{ x: 2, y: 0 }} color={"b"} startType={"bishop"} />,
-      <ChessPiece position={{ x: 3, y: 0 }} color={"b"} startType={"queen"} />,
-      <ChessPiece position={{ x: 4, y: 0 }} color={"b"} startType={"king"} />,
-      <ChessPiece position={{ x: 5, y: 0 }} color={"b"} startType={"bishop"} />,
-      <ChessPiece position={{ x: 6, y: 0 }} color={"b"} startType={"knight"} />,
-      <ChessPiece position={{ x: 7, y: 0 }} color={"b"} startType={"rook"} />,
-    ],
-    [
-      <ChessPiece position={{ x: 0, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 1, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 2, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 3, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 4, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 5, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 6, y: 1 }} color={"b"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 7, y: 1 }} color={"b"} startType={"pawn"} />,
-    ],
-    rowOfBlanks.slice(),
-    rowOfBlanks.slice(),
-    rowOfBlanks.slice(),
-    rowOfBlanks.slice(),
-    [
-      <ChessPiece position={{ x: 0, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 1, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 2, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 3, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 4, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 5, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 6, y: 6 }} color={"w"} startType={"pawn"} />,
-      <ChessPiece position={{ x: 7, y: 6 }} color={"w"} startType={"pawn"} />,
-    ],
-    [
-      <ChessPiece position={{ x: 0, y: 7 }} color={"w"} startType={"rook"} />,
-      <ChessPiece position={{ x: 1, y: 7 }} color={"w"} startType={"knight"} />,
-      <ChessPiece position={{ x: 2, y: 7 }} color={"w"} startType={"bishop"} />,
-      <ChessPiece position={{ x: 3, y: 7 }} color={"w"} startType={"king"} />,
-      <ChessPiece position={{ x: 4, y: 7 }} color={"w"} startType={"queen"} />,
-      <ChessPiece position={{ x: 5, y: 7 }} color={"w"} startType={"bishop"} />,
-      <ChessPiece position={{ x: 6, y: 7 }} color={"w"} startType={"knight"} />,
-      <ChessPiece position={{ x: 7, y: 7 }} color={"w"} startType={"rook"} />,
-    ],
-  ],
-];
