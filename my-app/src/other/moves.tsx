@@ -75,20 +75,28 @@ function isThreatened(
     for (let j = 0; j < validPaths[i].length; j++) {
       const potentialConflict =
         gameState[validPaths[i][j].y][validPaths[i][j].x].pieceStats;
-      if (potentialConflict) {
+      if (
+        potentialConflict &&
+        !(
+          potentialConflict.type === "king" && potentialConflict.color === color
+        )
+      ) {
         if (potentialConflict.color === color) break;
         if (
-          i % 2 === 0 &&
+          (validPaths[i][j].y === y || validPaths[i][j].x === x) &&
           (potentialConflict.type === "queen" ||
             potentialConflict.type === "rook")
         ) {
           return true;
         } else if (
-          potentialConflict.type === "bishop" ||
-          (potentialConflict.type === "pawn" &&
-            j === 0 &&
-            ((color === "white" && validPaths[i][j].y < y) ||
-              (color === "black" && validPaths[i][j].y > y)))
+          validPaths[i][j].y !== y &&
+          validPaths[i][j].x !== x &&
+          (potentialConflict.type === "bishop" ||
+            (potentialConflict.type === "king" && j === 0) ||
+            (potentialConflict.type === "pawn" &&
+              j === 0 &&
+              ((color === "white" && validPaths[i][j].y < y) ||
+                (color === "black" && validPaths[i][j].y > y))))
         ) {
           return true;
         }
@@ -98,7 +106,7 @@ function isThreatened(
   const relativeSpots = normalMoveSets.knight;
   const absoluteSpots = [];
   for (const moveSet of relativeSpots) {
-    absoluteSpots.push({ x: moveSet[0].x, y: moveSet[0].y });
+    absoluteSpots.push({ x: moveSet[0].x + x, y: moveSet[0].y + y });
   }
   for (const move of absoluteSpots) {
     if (move.x > -1 && move.x < 8 && move.y > -1 && move.y < 8) {
