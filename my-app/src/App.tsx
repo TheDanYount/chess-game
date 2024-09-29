@@ -5,6 +5,7 @@ import {
   tileBackgroundReset,
 } from "./other/initialState.tsx";
 import { getMoves } from "./other/moves.tsx";
+import { Piece } from "./components/Piece.tsx";
 
 export type PieceStats = {
   color: string;
@@ -26,7 +27,7 @@ export type Move = {
 export default function App() {
   const [gameState, setGameState] = useState<TileStats[][]>(initialTileStats);
   const [potentialMoves, setPotentialMoves] = useState<Move[]>([]);
-  //const [prisons, setPrisons] = useState<PieceStats[][]>();
+  const [prisons, setPrisons] = useState<PieceStats[][]>([[], []]);
   const [isWhitesTurn, setIsWhitesTurn] = useState(true);
   const [currentPiece, setCurrentPiece] = useState<{
     y: number;
@@ -112,6 +113,12 @@ export default function App() {
         gameState[y][7].pieceStats = undefined;
       }
     }
+    //Move the capture piece to prison
+    if (gameState[y][x].pieceStats) {
+      const prisonIndex = gameState[y][x].pieceStats.color === "black" ? 0 : 1;
+      prisons[prisonIndex].push(gameState[y][x].pieceStats);
+      setPrisons(prisons.slice());
+    }
     // Move the currentPiece to the new spot
     gameState[y][x].pieceStats = currentPiece.pieceStats;
     if (potentialEnPassant) setPotentialEnPassant(undefined);
@@ -132,7 +139,11 @@ export default function App() {
   let num = -1;
   return (
     <div className="flex">
-      <div className="w-[35px] md:w-[75px] h-[280px] md:h-[600px]"></div>
+      <div className="flex flex-col-reverse w-[35px] md:w-[75px] h-[280px] md:h-[600px] my-[-10.5px] md:my-[-22.5px]">
+        {prisons[0].map((piece) => (
+          <Piece color={piece.color} type={piece.type} />
+        ))}
+      </div>
       <div className="flex flex-col w-[280px] md:w-[600px] h-[280px] md:h-[600px]">
         {gameState.map((row) => (
           <div className="flex w-[280px] md:w-[600px] h-[35px] md:h-[75px]">
@@ -150,7 +161,11 @@ export default function App() {
           </div>
         ))}
       </div>
-      <div className="w-[35px] md:w-[75px] h-[280px] md:h-[600px]"></div>
+      <div className="flex flex-col-reverse w-[35px] md:w-[75px] h-[280px] md:h-[600px] my-[-10.5px] md:my-[-22.5px]">
+        {prisons[1].map((piece) => (
+          <Piece color={piece.color} type={piece.type} />
+        ))}
+      </div>
     </div>
   );
 }
